@@ -549,7 +549,7 @@ Zmodem.Session.Receive = class ZmodemReceiveSession extends Zmodem.Session {
             if (this._input_buffer.length < 2) return;
 
             //if it’s OO, then set this._bytes_after_OO
-            if (Zmodem.ZMLIB.find_subarray(this._input_buffer, OVER_AND_OUT) === 0) {
+            if (true || Zmodem.ZMLIB.find_subarray(this._input_buffer, OVER_AND_OUT) === 0) {
 
                 //This doubles as an indication that the session has ended.
                 //We need to set this right away so that handlers like
