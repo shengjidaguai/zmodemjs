@@ -151,7 +151,7 @@ class _Eventer {
  * and Send subclasses.
  *
  * @extends _Eventer
-*/
+ */
 Zmodem.Session = class ZmodemSession extends _Eventer {
 
     /**
@@ -338,11 +338,12 @@ Zmodem.Session = class ZmodemSession extends _Eventer {
             //We shouldn’t ever expect to receive an abort. Even if we
             //have sent an abort ourselves, the Sentry should have stopped
             //directing input to this Session object.
-            //if (this._expect_abort) {
+            // if (this._expect_abort) {
             //    return true;
-            //}
+            // }
+            return true;
 
-            throw new Zmodem.Error("peer_aborted");
+            // throw new Zmodem.Error("peer_aborted");
         }
     }
 
@@ -967,17 +968,20 @@ var Transfer_Offer_Mixin = {
  *
  * @mixes Transfer_Offer_Mixin
  */
-class Transfer {
+class Transfer extends _Eventer {
 
     /**
      * Not called directly.
      */
     constructor(file_info, offset, send_func, end_func) {
+        super();
         this._file_info = file_info;
         this._file_offset = offset || 0;
 
         this._send = send_func;
         this._end = end_func;
+
+        this._Add_event("send_progress");
     }
 
     /**
@@ -1440,14 +1444,15 @@ Zmodem.Session.Send = class ZmodemSendSession extends Zmodem.Session {
 
                         zrpos_handler_setter_func();
 
-                        res(
-                            new Transfer(
-                                params,
-                                hdr.get_offset(),
-                                sess._send_interim_file_piece.bind(sess),
-                                sess._end_file.bind(sess)
-                            )
-                        );
+                        let transfer = new Transfer(
+                            params,
+                            hdr.get_offset(),
+                            sess._send_interim_file_piece.bind(sess),
+                            sess._end_file.bind(sess)
+                        )
+                        this._current_transfer = transfer
+
+                        res(transfer);
                     },
                 };
             } );
@@ -1643,8 +1648,15 @@ Zmodem.Session.Send = class ZmodemSendSession extends Zmodem.Session {
 
             this._file_offset += chunk_size;
             obj_offset += chunk_size;
+            if (this._current_transfer) {
+                this._current_transfer._Happen("send_progress", (obj_offset / bytes_count * 100).toFixed(2));
+            }
 
-            if (obj_offset >= bytes_count) break;
+            if (obj_offset >= bytes_count) {
+                this._current_transfer._Happen("send_progress", 100.00);
+                this._current_transfer = null;
+                break;
+            }
         }
     }
 
