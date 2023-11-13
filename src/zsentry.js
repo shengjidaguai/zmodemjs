@@ -217,7 +217,7 @@ Zmodem.Sentry = class ZmodemSentry {
      *
      *  @param {number[] | ArrayBuffer} input - Octets to parse as input.
      */
-    consume(input) {
+    consume(input, inputString) {
         if (!(input instanceof Array)) {
             input = Array.prototype.slice.call( new Uint8Array(input) );
         }
@@ -318,7 +318,7 @@ Zmodem.Sentry = class ZmodemSentry {
             }
         }
 
-        this._to_terminal(to_terminal);
+        this._to_terminal(to_terminal, inputString);
     }
 
     /**
